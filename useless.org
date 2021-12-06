@@ -1,0 +1,89 @@
+* 英语
+address the issue
+
+| theorem    | 定理           |
+| corollary  | 推论           |
+| lemma      | 引理           |
+| example    | 例子           |
+| definition | 定义           |
+| remark     | 注, 非正式定理 |
+| note       | 注             |
+
+* comfast CF-811AC
+https://github.com/brektrou/rtl8821CU
+
+# 查架构
+#+BEGIN_SRC sh
+uname -a
+sudo dpkg --print-architecture
+#+END_SRC
+
+# 电脑没网情况下安装软件源里的包
+#+BEGIN_SRC sh
+sudo dpkg -i dkms_2.8.1-5ubuntu1_all.deb
+#+END_SRC
+
+* tenda U9
+显示是 8811CU 但仍然可以用上述的 8821CU
+
+#+BEGIN_SRC sh
+lsusb
+#+END_SRC
+Bus 001 Device 006: ID 0bda:1a2b Realtek Semiconductor Corp.
+
+#+BEGIN_SRC sh
+sudo usb_modeswitch -KW -v 0bda -p 1a2b
+#+END_SRC
+
+转换命令行
+#+BEGIN_SRC sh
+sudo usb_modeswitch -KW -v 0bda -p 1a2b
+#+END_SRC
+#+BEGIN_SRC sh
+emacs /lib/udev/rules.d/40-usb_modeswitch.rules
+#+END_SRC
+
+- Edit usb_modeswitch rules:
+  /lib/udev/rules.d/40-usb_modeswitch.rules
+- Append before the end line LABEL="modeswitch_rules_end" the following:
+  # Realtek 8211CU Wifi AC USB
+  ATTR{idVendor}=="0bda", ATTR{idProduct}=="1a2b", RUN+="/usr/sbin/usb_modeswitch -K -v 0bda -p c811"
+
+* 删除 windows.old
+右键系统盘, 属性, 点磁盘清理, 点清理系统文件, 勾选以前的 windows 安装
+
+* 手机注册过的应用
+** 银行
+- 建设银行
+- 工商银行
+- 中信银行
+- 瑞丰银行
+
+** 公务员(其他)
+- 粉笔
+- 中公题库
+- 学习强国
+
+** 生活
+- 京东(其他)
+- 淘宝(其他)
+- 支付宝
+- 恒大智慧社区
+
+** 社交
+- 微信
+- QQ
+- 钉钉
+- bilibili
+- 百度网盘
+
+** 废弃
+- 掌上电力(国家电网)
+- 个人所得税
+
+** 没注册
+- orgzly
+- firefox
+- 下厨房
+- 百度地图
+- pdf reader pro

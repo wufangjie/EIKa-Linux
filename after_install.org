@@ -1,0 +1,181 @@
+#+AUTHOR: wfj
+#+EMAIL: wufangjie1223@126.com
+#+OPTIONS: ^:{} \n:t email:t
+#+HTML_HEAD_EXTRA: <style type="text/css"> body {padding-left: 26%; background: #e3edcd;} #table-of-contents {position: fixed; width: 25%; height: 100%; top: 0; left: 0; overflow-y: scroll; resize: horizontal;} i {color: #666666;} pre, pre.src:before {color: #ffffff; background: #131926;} </style>
+#+HTML_HEAD_EXTRA: <script type="text/javascript"> function adjust_html(){document.getElementsByTagName("body")[0].style.cssText="padding-left: "+(parseInt(document.getElementById("table-of-contents").style.width)+5)+"px; background: #e3edcd;"}; window.onload=function(){document.getElementById("table-of-contents").addEventListener("mouseup",adjust_html,true)}</script>
+
+* backup files
+| .config/     | - |
+| .emacs.d/    | - |
+| .fonts/      |   |
+| .mozilla/    | - |
+| .config/pip/ |   |
+| .emacs       |   |
+| .theanorc    | - |
+| .xmodmap     |   |
+
+* install softwares
+#+BEGIN_SRC sh
+sudo apt-get install emacs
+sudo apt-get install git curl
+
+sudo apt-get install mysql-server mysql-client
+sudo apt-get install synaptic
+#sudo apt-get install libreoffice
+#sudo apt-get install subversion
+sudo apt-get install p7zip p7zip-full p7zip-rar
+sudo apt-get install unrar
+
+sudo apt-get install fcitx fcitx-libpinyin
+#+END_SRC
+
+* install python packages
+#+BEGIN_SRC sh
+sudo apt-get install python3-pip
+sudo apt-get install python3-pip
+sudo apt-get install python3-numpy python3-scipy python3-matplotlib
+sudo apt-get install python3-virtualenv
+pip3 install pandas seaborn selenium mysql-connector-python
+
+sudo apt-get install p7zip p7zip-full p7zip-rar
+sudo apt-get install unrar
+sudo apt-get install python3-pyqt5 python3-xlib
+#openpyxl
+#+END_SRC
+
+* emacs
+#+BEGIN_SRC emacs-lisp
+(package-initialize)
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+#+END_SRC
+
+M-x package-refresh-contents
+# wait
+M-x package-install ret jedi ret
+# after install python3-virtualenv
+M-x jedi:install-server ret
+
+* rust
+** download
+https://doc.rust-lang.org/book/ch01-01-installation.html
+#+BEGIN_SRC sh
+curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+#+END_SRC
+
+** PATH
+reboot, make sure ~/.cargo/bin in PATH
+#+BEGIN_SRC sh
+cargo --version
+#+END_SRC
+
+** emacs package
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+#+END_SRC
+
+M-x package-refresh-contents
+M-x package-install pkg_name ret
+(install following packages, one by one, note the order)
+| lsp-mode (install before rustic) |
+| flycheck                         |
+| rustic                           |
+| company                          |
+|----------------------------------|
+| yasnippet                        |
+
+M-x lsp-install-server ret rust-analyzer ret
+
+# will download rust-analyzer to (~/.emacs.d/.cache/lsp/rust/) from
+# https://github.com/rust-analyzer/rust-analyzer/releases
+
+* locale
+C-x C-f /sudo::/etc/default/locale, 重启生效
+#+BEGIN_SRC conf
+LANG="en_US.UTF-8"
+LC_CTYPE="zh_CN.UTF-8"
+#+END_SRC
+
+* shortcuts
+** keyboard -> Application Shortcuts
+xfce4-appfinder --collapsed
+
+** window-manager -> keyboard
+
+** 其他
+xfce4-appearance-settings -> settings -> enable editable accelerators (勾选)
+之后就可以在一些 xfce4 的 app 的菜单栏, 用 delete 取消绑定快捷键了, 之后就可以找相应的配置文件来自定义快捷键了
+
+* firefox setting
+** disable alt
+about:config
+search ui.key.menuAccessKeyFocuses, and set it to false
+
+** screenshot
+console
+#+BEGIN_SRC
+:screenshot filename --selector some_css_selector
+#+END_SRC
+
+** 修改默认浏览器
+#+BEGIN_SRC python
+sudo update-alternatives --config x-www-browser
+#+END_SRC
+修改成对应数字, 但我试了对于 python webbrowser 包不管用, 而在 google chrome 和 火狐都认为自己是默认浏览器
+
+xfce4: settings -> Preferred Applications -> 修改之后重启生效
+
+** 修改 xdg-open 的默认浏览器
+#+BEGIN_SRC sh
+xdg-settings set default-web-browser firefox.desktop
+#+END_SRC
+
+** 键盘操作 sidebar
+默认切出来的时侯是在搜索位置,
+法一, 此时只要 Shift+Tab, focus 就会移到 X 上, 回车就可以关闭
+法二, 此时只要把 focus 移出该位置 (比如 Tab, 或 Shift+Tab), 然后按切出该 sidebar 的快捷键, 就可以关闭
+** theme
+https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/theme
+
+* mirror
+https://mirrors.bfsu.edu.cn/
+北外镜像站作为 TUNA 镜像的姊妹站，由北外信息技术中心支持创办、清华 TUNA 协会运行维护
+** pypi
+https://mirrors.bfsu.edu.cn/pypi/web/simple
+
+** ubuntu
+https://mirrors.bfsu.edu.cn/help/ubuntu/
+
+* setting-editor (system level)
+** font size
+xsettings -> FontName
+
+** emacs kbd
+xsettings -> KeyThemeName -> (Emacs)
+
+* startup setting
+xfce4-session-settings -> Application Autostart
+(or kuma startup)
+
+* mysql
+现在版本的 mysql 装完都不设密码了, 初始密码存在 /etc/mysql/debian.cnf 中
+* v2ray
+download qv2ray from github
+download v2ray-core from github
+run qv2ray.appimage -> kernel setting
+
+* fcitx
+设置里禁用全角字符不管用了, 直接在图形界面点击
+繁体和简体也可以在这里切
+
+fcitx 的没用的快捷键一定要禁用, 它的优先级很高
+* dist-upgrade
+系统升级?(x) (number) not upgraded.
+#+BEGIN_SRC sh
+sudo apt-get dist-upgrade
+
+lsb_release -a
+uname -a
+cat /proc/version
+#+END_SRC

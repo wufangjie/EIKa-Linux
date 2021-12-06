@@ -1,0 +1,395 @@
+#+AUTHOR: wfj
+#+EMAIL: wufangjie1223@126.com
+#+OPTIONS: ^:{} \n:t email:t
+#+HTML_HEAD_EXTRA: <style type="text/css"> body {padding-left: 26%; background: #e3edcd;} #table-of-contents {position: fixed; width: 25%; height: 100%; top: 0; left: 0; overflow-y: scroll; resize: horizontal;} i {color: #666666;} pre, pre.src:before {color: #ffffff; background: #131926;} </style>
+#+HTML_HEAD_EXTRA: <script type="text/javascript"> function adjust_html(){document.getElementsByTagName("body")[0].style.cssText="padding-left: "+(parseInt(document.getElementById("table-of-contents").style.width)+5)+"px; background: #e3edcd;"}; window.onload=function(){document.getElementById("table-of-contents").addEventListener("mouseup",adjust_html,true)}</script>
+
+* tricks
+** 依赖问题
+使用 dpkg 安装时缺少依赖时
+#+BEGIN_SRC sh
+sudo apt-get -f install # --fix-broken
+#+END_SRC
+
+** 用命令 (rm, rm -rf, 或右键 delete) 无法删除文件夹时, 即会出现以下报错:
+#+BEGIN_SRC sh
+rm: cannot remove: Directory not empty
+#+END_SRC
+解决方法: 删除到回收站, 然后清空回收站即可, (还不行就重启再进行上述操作)
+
+* git
+** config
+配置用户名和邮箱
+#+BEGIN_SRC sh
+git config --global user.name "wfj"
+git config --global user.email "wufangjie1223@126.com"
+
+git config --list #显示当前配置
+#+END_SRC
+
+关于 windows 回车换行的问题 true, input, false
+#+BEGIN_SRC sh
+git config --global core.autocrlf input
+#+END_SRC
+
+difftool 相关不用设置, 我习惯直接用 (prefix) M-x vc-ediff
+
+** 连接 github
+ssh key
+#+BEGIN_SRC sh
+ssh-keygen -t rsa -C "wufangjie1223@126.com"
+# or
+ssh-keygen -t ed25519 -C "wufangjie1223@126.com"
+#+END_SRC
+
+在 github 账户右上角 Settings -> SSH and GPG keys
+在 中添加 ssh key, 复制 ~/.ssh/id_rsa.pub (or id_ed25519.pub) 内容到相应位置
+#+BEGIN_SRC sh
+ssh -T git@github.com # 测试
+#+END_SRC
+
+** 创建版本库 (repository)
+#+BEGIN_SRC sh
+cd repo_dir # 到要作为仓库的目录, 最好是新建的空目录
+git init # 此时会生成一个 .git 目录, 是 git 来跟踪管理版本库的
+#+END_SRC
+
+#+BEGIN_SRC sh
+git remote add origin git@github.com:wufangjie/learning-notes
+#+END_SRC
+如果提示 fatal: remote origin already exists. 先输入以下代码后再 add
+#+BEGIN_SRC sh
+git remote rm origin
+#+END_SRC
+
+** main branch (for github)
+#+BEGIN_SRC sh
+git checkout -b main && git merge master && git branch -d master # all in
+
+git checkout -b main
+git merge master
+git branch -d master # 删除本地 master
+git push origin :master # 删除远程 master
+#+END_SRC
+
+** 提交文件到版本库
+#+BEGIN_SRC sh
+git status # 查看修改状态
+
+git add git.org # 把文件修改添加到暂存区 (stage)
+git commit -m "some message" # 把暂存区的所有内容提交到版本库的当前分支
+git push origin master # 提交到远程 github 仓库
+#+END_SRC
+
+** git log
+#+BEGIN_SRC sh
+git log filename
+git log
+#+END_SRC
+
+
+** 撤销和删除
+*** 撤销 git rm
+
+#+BEGIN_SRC sh
+git status # 会提示可以撤销的命令, 分两步
+git restore --staged YuanMoWen.ttf # unstage
+git restore YuanMoWen.ttf # discard changes
+#+END_SRC
+
+
+** diff
+用 (prefix) M-x vc-ediff 代替
+| git diff                         | 比较工作区和暂存区 (没有则版本库) 的区别 |
+| git diff file                    | 同上, 对某一文件                         |
+| git diff --cached                | 比较暂存区和版本库的区别                 |
+| git diff --cached file           | 同上, 对某一文件                         |
+| git diff HEAD                    |                                          |
+| git diff comment_id1 comment_id2 | 查看某两个版本之间的差异                 |
+|                                  | id后接:file, 同上, 对某一文件            |
+
+** 其他常用命令
+#+BEGIN_SRC sh
+git reset file # unadd
+git checkout -- file # 用暂存区 (没有则版本库) 的版本替换工作区的版本
+git rm file [--cache | -f] # keep file or force removal
+git mv
+git pull https://github.com/wufangjie/learning-notes master
+git pull origin master
+
+git reflog # list commit_id and commit message
+git reset --soft commit_id
+git reset --hard commit_id
+git log [commit_id] # show commit logs
+git log # show all recent logs
+#+END_SRC
+如果不小心把账号密码传到了 github 上, 可以进行如下操作
+#+BEGIN_SRC sh
+git reset --hard commit_id # 回退到没有错误提交前的版本
+git push origin HEAD --force
+#+END_SRC
+
+** 名词解释
+| HEAD    | the current commit your repo is on         |
+| origin  | the default name given to main remote repo |
+| master  | default branch, remote or local            |
+|---------+--------------------------------------------|
+| HEAD~^^ | 上上个版本之前的                           |
+| HEAD~n  | 上100个版本                                |
+#+BEGIN_SRC sh
+git branch -a # 显示所有分支
+#+END_SRC
+
+** remove remote tag
+#+BEGIN_SRC sh
+git push --delete origin v0.0.6 # tag_name
+#+END_SRC
+https://stackoverflow.com/questions/5480258/how-to-delete-a-remote-tag
+
+** clone 的 repo 更新
+*** clone and update
+TODO
+#+BEGIN_SRC sh
+git clone url
+
+git fetch --all
+git reset --hard origin/master
+#+END_SRC
+# https://www.zhihu.com/question/264732145
+
+** 为别人的开源项目提交代码
+fork -> create a new branch -> edit (github 网页上直接就能改) and commit -> pull request
+如果需要修改之前的 pull request, 如果还没有被合并的话, 那么直接修改然后 commit 就可以了, 如果已经被合并了, 那就需要再提交一个新的 pull request
+
+** conflicts
+TODO
+
+* svn
+#+BEGIN_SRC sh
+svn info [new_url]
+svn relocate new_url
+svn help relocate
+
+svn status
+svn update
+svn add file_name
+svn commit -m ""
+#+END_SRC
+
+* linux commandline
+** wildcard
+| ?   |
+| *   |
+| []  |
+| [-] |
+| [^] |
+
+** special characters
+| \    | 转义                                                               |
+| #    | 注释                                                               |
+| "    | 只会解释 wildcard 和 \, `$ 也会影响, 不过不用 shell 的话基本用不到 |
+| 空格 | 分隔                                                               |
+| 竖线 | 管道                                                               |
+| ;    | 命令分隔符                                                         |
+功能其实用到的很有限, 主要是文件名的处理\\
+我认为给所有的 [^a-zA-Z0-9] 前都加一个 \ 就是 bash-safe 的, 不知道对不对
+
+** pipelines and xargs
+pipe operator |, 之后不加 xargs 的话, 就是把前一条命令的结果当作一个文件用后一条命令来处理; 否则, 就是把前一条命令的结果当作参数追加到后一条命令并执行\\
+如果不用 -I 的话就是加在命令最后; -I{} 就会替换后面命令中的 {}
+#+BEGIN_SRC sh
+find ~/ -name ".py" | xargs -I{} cp {} newdir
+#+END_SRC
+eshell 的命令行的长度只能到最低标准 4096, 所以用起来会有问题, 不知道能不能通过设置变量解决, 但我查了 describe-variance 中 eshell 相关变量未发现能改的
+
+批量删除 libreoffice 生成的临时文件
+#+BEGIN_SRC sh
+find ~/ -name "\.~*" | xargs -I{} rm "{}"
+#+END_SRC
+
+** grep
+| -E | --extended-regexp            |
+| -F | --fixed-strings (full match) |
+| -G | --basic-regexp (default)     |
+| -P | --perl-regexp                |
+|----+------------------------------|
+| -r | --recursive                  |
+| -n | --line-number                |
+| -i | --ignore-case                |
+| -v | --invert-match               |
+| -l | --files-with-matches         |
+| -L | --files-without-match        |
+
+#+BEGIN_SRC sh
+grep -rn string_you_want files
+find ~/ -name "*.py" | xargs grep ...
+# when items contain white-space, quotes or backslash, write as follow
+find ~/ -name "*.py" -print0 | xargs --null grep ...
+apt-cache pkgnames | grep -E ^python3-a
+#+END_SRC
+
+** find
+有时候 * 需要转义, 还不太清楚
+| -name pattern | Wildcard                                        |
+| -size n       | c(Bytes), w(2-byte words), b(default), k, M, G  |
+| -type c       | d(Directory), f(Regular file), l(Symbolic link) |
+| -maxdepth n   | 0 表当前结点 (一般为文件夹名, 不检查文件)       |
+| -mindepth n   | 同上                                            |
+|---------------+-------------------------------------------------|
+| -and          |                                                 |
+| -or           |                                                 |
+| -not          |                                                 |
+| ( )           |                                                 |
+|---------------+-------------------------------------------------|
+| -group name   |                                                 |
+| -user name    |                                                 |
+| -perm mode    |                                                 |
+| -ctime n      |                                                 |
+| -mtime n      |                                                 |
+
+#+BEGIN_SRC sh
+sudo find / -name "*#" | xargs rm
+#+END_SRC
+
+** compress and extract
+*** tar
+| -x | --extract       |
+|    |                 |
+| -z | --gzip .gz      |
+| -Z | --compress .Z   |
+| -j | --bzip2 .bz2    |
+| -J | --xz .xz        |
+|    |                 |
+| -v | --verbose       |
+|    |                 |
+| -f | --file=ARCHIVE  |
+|    |                 |
+| -C | --directory=DIR |
+|    |                 |
+|----+-----------------|
+| -c | create          |
+| -u | update          |
+
+#+BEGIN_SRC
+tar -xzvf filename.tar.gz -C target_path
+#+END_SRC
+
+*** other common tools
+| gzip  | gunzip |
+| bzip2 | bunzip |
+| zip   | unzip  |
+| rar   | unrar  |
+| 7z    |        |
+
+NOTE: the package name of 7z is p7zip, p7zip-full, p7zip-rar
+
+** file management
+| ls    | -a -d -h -l -R          | -r -U -S -t -v -X  emacs dired sort |
+| cd    |                         |                                     |
+| pwd   |                         |                                     |
+|-------+-------------------------+-------------------------------------|
+| cp    | -i -r -u                | cp item1 item2  cp item... dir      |
+| mv    | -i -u                   | mv item1 item2  mv item... dir      |
+| rm    | -i -r -d                | rm item...                          |
+| mkdir | -p                      | mkdir dir...                        |
+| rmdir | -p                      |                                     |
+| chmod | -R                      | chmod -R 775 ~/pdf                  |
+| chown | -R                      |                                     |
+| chgrp | -R                      |                                     |
+| ln    | -s                      | ln file link  ln -s item link       |
+| cat   |                         | use emacs instead                   |
+| wc    |                         | Word Count                          |
+|-------+-------------------------+-------------------------------------|
+| grep  |                         |                                     |
+| sort  |                         |                                     |
+| uniq  |                         |                                     |
+|-------+-------------------------+-------------------------------------|
+| df    | df -h                   | Disk Free                           |
+| du    | du -ah --max-depth 1 ~/ | Disk Usage                          |
+
+** hardware management
+| dd     |                                  |            |
+| fdisk  | sudo fdisk -l /dev/sd[b-z]       |            |
+| mkfs   |                                  |            |
+| lscpu  |                                  |            |
+| lspci  |                                  |            |
+| lsusb  |                                  |            |
+| mount  |                                  |            |
+| umount |                                  |            |
+
+*** 制作启动 u 盘
+注意, 会格式化 u 盘
+#+BEGIN_SRC sh
+df -h
+sudo fdisk -l
+umount /dev/sdb
+sudo dd if=xubuntu-16.04-desktop-amd64.iso of=/dev/sdb bs=4M
+#+END_SRC
+
+*** 格式化
+#+BEGIN_SRC sh
+sudo mount /dev/sdb /mnt
+sudo umount /dev/sdb1
+sudo mkfs -t vfat /dev/sdb1
+#+END_SRC
+
+** other
+*** wget
+#+BEGIN_SRC sh
+wget -c -r http://www.fon.hum.uva.nl/david/ma_ssp/2007/TIMIT/
+wget -nc -r http://www.fon.hum.uva.nl/david/ma_ssp/2007/TIMIT/
+#+END_SRC
+
+*** ssh
+#+BEGIN_SRC sh
+ssh -l root xxx.xxx.xxx.xxx
+#+END_SRC
+
+*** fc-list (about font)
+#+BEGIN_SRC sh
+fc-list
+fc-list :lang=zh
+#+END_SRC
+
+* pip
+| -U | --upgrade            |                                          |
+| -i | --index-url <url>    | http://pypi.doubanio.com/simple          |
+|    | --timeout <sec>      |                                          |
+|    | --user               |                                          |
+| -t | --target <dir>       | Install packages into <dir>              |
+|    | --egg                | When install mysql-connector-python-rf   |
+| -r | --requirement <file> | Install from the given requirements file |
+
+#+BEGIN_SRC sh
+pip3 -V
+sudo pip3 install -U pip
+sudo pip3 install packname
+sudo pip3 install local_package.tar.gz
+pip3 search packname_like
+pip3 search packname_like | grep -E some_regexp
+pip3 show packname  # Show information about installed packages
+pip3 list  # List installed packages
+#+END_SRC
+
+** pip 解决 index-url 无法正常工作的问题
+~/.pip/pip.conf 或 ~/.config/pip/pip.conf
+
+#+BEGIN_EXAMPLE
+[global]
+timeout = 180
+index-url = https://mirrors.bfsu.edu.cn/pypi/web/simple
+format = columns
+#+END_EXAMPLE
+
+都无法工作, 但是命令行加 -i 参数是可以的, 一直不得其解, 后来发现是我用 pip3 都是用的 sudo, 正是这个 sudo, 导致了 pip3 去读了 root 的 pip.conf, 没发现, 然后就用了 pypi.python.org, 需要新建 /root/.pip/pip.conf
+
+另外, 不是特别常用和重要的包, 不要用 sudo 安装
+
+#+BEGIN_SRC sh
+pip config list
+pip3 config list
+sudo pip config list
+sudo pip3 config list
+#+END_SRC
+
+windows: 在 C:\Users\xx\pip，新建文件pip.ini
