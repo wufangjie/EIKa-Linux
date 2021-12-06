@@ -1,0 +1,15 @@
+* after_install
+the thing should do after install
+
+* linux
++ bash
++ git / svn
++ pip
+
+* history
++ use cmd history to manage useful cmd
++ use eshell's prefix match to fast locate correct cmd in history
++ use h2r sub cmd to fast match hard to remember cmds
+
+* useless
+seems useless now
