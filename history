@@ -1,0 +1,59 @@
+* apt
+sudo apt-get install git curl
+sudo apt-get install python3-pip python3-virtualenv
+sudo apt-get install python3-pyqt5 python3-xlib
+sudo apt-get install fcitx fcitx-libpinyin
+im-config
+sudo apt-get install python3-numpy python3-scipy python3-matplotlib
+* mine
+xmodmap ~/.xmodmap
+chmod 777 v2ctl v2ray
+python3 ~/wfj/kuma/travel_async_but_risky.py
+* pip
+pip3 install numpy
+pip3 config list
+pip3 show numpy
+pip3 --list
+pip3 uninstall
+* git
+git config --global user.name "wfj"
+git config --global user.email "wufangjie1223@126.com"
+ssh-keygen -t ed25519 -C "wufangjie1223@126.com"
+ssh -T git@github.com # test
+git pull origin master
+git pull origin main
+git remote add origin git@github.com:wufangjie/xxx.git
+git push origin :master # 删除远程 master
+git status
+git commit -m ""
+git push origin master
+git push origin main
+git checkout -b main && git merge master && git branch -d master
+git log filename
+* cargo
+cargo run
+cargo run --release
+cargo build --release
+cargo test -- --nocapture modname::testname
+cargo bench
+h2r cargo rustup update
+h2r cargo RUST_BACKTRACE=1 cargo run
+h2r cargo time cargo run
+perf record cargo run --release
+perf report
+* bash
+find ~/ -type l
+find ~/ -name "*.py" -print0 | xargs --null grep
+find ~/ -name "*[#~]" | xargs -I{} rm "{}"
+grep -rn "" files
+grep -rn HashMap /home/wfj/wfj/learn/ --exclude-dir=target
+ln -s ~/wfj/utils/ ~/wfj/learn/playground/utils
+ln -s ~/wfj/utils/ ~/wfj/learn/utils
+ln -s ~/wfj/utils/ ~/wfj/leetcode-rust/utils
+ln -s ~/wfj/utils/ ~/learn_blockchain/utils
+* sys
+h2r sys df -h
+h2r sys du -ah --max-depth 1 ~/
+h2r sys tar -xzvf filename.tar.gz -C target_path
+h2r sys uname -r
+* unfiled
