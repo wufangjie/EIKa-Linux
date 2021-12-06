@@ -7,6 +7,7 @@ the thing should do after install
 + pip
 
 * history
+~/.emacs.d/eshell/history
 + use cmd history to manage useful cmd
 + use eshell's prefix match to fast locate correct cmd in history
 + use h2r sub cmd to fast match hard to remember cmds
