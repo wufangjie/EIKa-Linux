@@ -1,0 +1,249 @@
+* pre
+#+BEGIN_SRC
+HELP something;
+QUIT
+EXIT
+
+AS
+#+END_SRC
+
+一般默认 SQL 的关键字大写, 便于阅读和调试
+
+* SHOW
+#+BEGIN_SRC sql
+SHOW DATABASES;
+USE database_name;
+SHOW TABLES;
+DESCRIBE table_name; /* sugar for SHOW COLUMNS FROM some_table; */
+SHOW CREATE DATABASE database_name;
+SHOW CREATE TABLE table_name; /* detail */
+#+END_SRC
+
+* SELECT
+#+BEGIN_SRC sql
+SELECT DISTINCT /* DISTINCT 关键字应用于所有列而不仅是前置它的列 */
+SELECT table_name.column_name
+ORDER BY column_name [[ASC|]DESC][, column_name2] /*  */
+LIMIT [index,]len /* 0-indexed */
+#+END_SRC
+
+可以用来简单测试某个语法
+#+BEGIN_SRC
+SELECT 5 % 3;
+#+END_SRC
+
+* WHERE
+#+BEGIN_SRC sql
+
+#+END_SRC
+| =                       |    |
+| <>                      | != |
+| >                       | >= |
+| <                       | <= |
+| [NOT] BETWEEN .. AND .. |    |
+| IS [NOT] NULL           |    |
+| [NOT] IN                |    |
+| AND                     | OR |
+| [NOT] EXISTS            |    |
+
+IN 一般比 OR 快, 可接子查询, 可用索引
+
+** 不能索引情况
++ <>, !=
++ IS [NOT] NULL
++ OR
++ where 字句尽量避免对字段使用函数和计算, 比如: where score + 5 > 90 => where score > 90 - 5 (仅限 mysql8 以前)
+
+* LIKE, REGEXP
+wildcard: %, _
+NOTE: like "%" 不能匹配 null
+
+* 字段操作
+通常函数首字母大写?
+
+** 数字操作
++-*/
+Abs
+Exp
+
+** 字符串操作
+Concat
+Trim (Rtrim, Ltrim)
+Upper (Lower)
+Length
+Left
+Right
+SubString
+
+** 日期时间操作
+| now                            |                   |
+| date                           |                   |
+| time                           |                   |
+| date_format(now(), "%Y-%m-%d") |                   |
+| dayofyear                      | 1                 |
+| weekofyear                     | 星期一始, 50+     |
+| week                           | 星期日始, 0       |
+| dayofweek                      | 星期日为0         |
+| weekday                        | 星期一为0         |
+| year                           |                   |
+| month                          | 1                 |
+| day                            | 1                 |
+|--------------------------------+-------------------|
+| date_add                       | interval num unit |
+| date_sub                       |                   |
+| date_diff                      |                   |
+| time_diff                      |                   |
+
+** 类型转换
+#+BEGIN_SRC sql
+cast(value as type)
+convert(value, type)
+#+END_SRC
+
+* 聚合
+AVG, COUNT, MAX, MIN, SUM
+COUNT(*) 包括 NULL, COUNT(column_name) 不包括 column_name=NULL
+AVG(DISTINCT column_name) 计算唯一平均值 (出现多次视为一次)
+
+(DISTINCT *) 是不合法的
+#+BEGIN_SRC sql
+SELECT count(*)
+FROM (SELECT DISTINCT * FROM table_name) as other_name; /* as is important */
+#+END_SRC
+
+** HAVING
+二次筛选
+
+** ROLLUP
+使用 ROLLUP 使用 WITH ROLLUP 关键字, 可以得到每个分组以及每个分组的 *汇总*, 如下所示:
+#+BEGIN_SRC sql
+SELECT vend_id, COUNT(*) AS num_prods
+FROM products
+GROUP BY vend_id WITH ROLLUP;
+#+END_SRC
+
+* JOIN
+** way 1
+#+BEGIN_SRC sql
+FROM t1, t2
+WHERE
+#+END_SRC
+
+** (inner) join
+** left/right (outer) join
+** A-B / B-A
+#+BEGIN_SRC sql
+ON A.PK = B.PK
+WHERE B.PK IS NULL;
+#+END_SRC
+
+** full outer join (mysql 未实现, 用 UNION 实现)
+* SELECT 顺序梳理
+#+BEGIN_SRC sql
+SELECT
+FROM
+JOIN
+ON
+WHERE
+GROUP BY
+HAVING
+ORDER BY
+LIMIT
+#+END_SRC
+
+* UNION [ALL]
+UNION 会从查询结果集中自动去除重复的行
+UNION ALL 不会
+
+* [NOT] EXISTS
+#+BEGIN_SRC sql
+SELECT *
+FROM A
+WHERE EXISTS (SELECT 1 FROM B WHERE B.id = A.id);
+#+END_SRC
+
+* INSERT, UPDATE, DELETE
+#+BEGIN_SRC sql
+INSERT INTO table_name
+[(column_name, ..)]
+[VALUE|VALUES] (value, ..), ..;
+
+UPDATE table_name
+SET column_name = value
+WHERE caluse;
+
+DELETE FROM table_name
+WHERE caluse;
+
+TRUNCATE TABLE table_name; /* 删除表并创建一个新的, delete 是逐行删除 */
+
+DROP table_name; /* 删除表 */
+
+RENAME TABLE table_name TO new_table_name;
+#+END_SRC
+
+* CREATE TABLE
+** 类型
+int (tinyint, smallint, int, bigint) (8, 16, 32, 64)
+float
+double
+char(n)
+varchar(n)
+date
+datetime
+decimal(m,n)
+
+blob
+text
+
+** 引擎 (注意是绑定表, 而非数据库)
++ InnoDB 是一个可靠的事务处理引擎(参见第26章), 它不支持全文本搜索;
++ MEMORY 在功能等同于 MyISAM ,但由于数据存储在内存(不是磁盘)中,速度很快(特别适合于临时表);
++ MyISAM 是一个性能极高的引擎, 它支持全文本搜索(参见第18章), 但不支持事务处理。
+
+* 视图
+#+BEGIN_SRC sql
+CREATE VIEW view_name AS
+some_select
+#+END_SRC
+
+* tricks
+** 初始密码存在 /etc/mysql/debian.cnf 中
+** if/case (可在聚合里使用)
+*** if(condition, 1, 0)
+#+BEGIN_SRC sql
+(sum(if(score >= 60, 1, 0)) / count(*)) 及格率,
+#+END_SRC
+
+*** case
+#+BEGIN_SRC sql
+case
+  when cond1 then val1
+  when cond1 then val2
+  else val3
+end
+#+END_SRC
+
+** 开窗函数 (mysql 8.0+)
+*** 可以用专用函数或聚合函数
+专用函数:
++ rank
++ dense_rank 用于 16.1
++ row_number 用于行号
+
+*** over
+partition by col_name_1 # 分组排名
+order by col_name_2 [desc]
+rows/range between # TODO:
+
+其内的语句执行再 group by 之后, 可执行聚合函数
+但不能使用 select 中的聚合函数结果的别名 (having 可以), 因为是同一级别?
+
+** on 和 where
+on 是在生成临时表时的条件,
+而 where 是临时表生成后的过滤条件
+
+** 聚合函数 group_concat
+
+** in, exists, join
+应该是差不多效率的
