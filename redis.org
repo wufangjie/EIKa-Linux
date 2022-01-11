@@ -1,0 +1,129 @@
+* useful
+|                  | return                              |          |
+|------------------+-------------------------------------+----------|
+| KEYS *           | lst                                 | wildcard |
+| TYPE key         | none, string, list, set, hash, zset |          |
+| HELP cmd         |                                     |          |
+| RENAME key1 key2 | OK                                  |          |
+| RENAMENX         | 0/1                                 |          |
+
+|                  | return  |
+|------------------+---------|
+| EXPIRE sec       | 0/1     |
+| TTL              | -2/-1/s |
+| PEXPIRE mill_sec | 0/1     |
+NOTE: set will reset expire time
+
+* string
+|                     | return     |                                 |
+|---------------------+------------+---------------------------------|
+| SET key val         | OK         |                                 |
+| GET key             | val        |                                 |
+| DEL key             | 0/1        |                                 |
+| EXISTS key          | 0/1        |                                 |
+| GETSET key val      | origin val |                                 |
+| MGET                | multi get  |                                 |
+| MSET                | multi set  |                                 |
+| SETNX               |            | set if not exist                |
+| SETEX key *sec val* | OK         | *atomic* == set key val ex sec? |
+| MSETNX              | 0/1        | *atomic*, multi set not exist   |
+
+|                 |                                |
+|-----------------+--------------------------------|
+| DECR key        | non existing key, default to 0 |
+| DECRBY key [-]n |                                |
+| INCR key        |                                |
+| INCRBY key [-]n |                                |
+
+* list
+|                       | return |                        |
+|-----------------------+--------+------------------------|
+| LLEN key              | len    |                        |
+| LPOP key              | val    | left                   |
+| LPUSH key val ..      | len    |                        |
+| LRANGE key lo [-]hi   | lst    |                        |
+| LREM key [-]count val | 0/1    | O(n)                   |
+| RPOP key              | val    |                        |
+| RPUSH key val ..      | len    |                        |
+| RPOPLPUSH key1 key2   | val    |                        |
+| LINDEX key i          | val    |                        |
+| LSET key i val        | OK     |                        |
+| LTRIM key lo hi       | OK     | only keep lst[lo..=hi] |
+
+* set
+|                            | return |                                   |
+|----------------------------+--------+-----------------------------------|
+| SADD key val ..            | 0/1    | 0: already in side                |
+| SISMEMBER key val          | 0/1    |                                   |
+| SPOP key [n]               |        |                                   |
+| SREM key val               | 0/1    |                                   |
+| SMEMBERS key               |        |                                   |
+| SRANDMEMBER [n]            |        | -n means allow repeating          |
+| SDIFF key1 key2 ..         |        | set difference                    |
+| SINTER key1 key2 ..        |        | set intersection                  |
+| SUNION key1 key2 ..        |        | non existing set considered empty |
+| SDIFFSTORE dstkey          |        | set dstkey (sdiff ..)             |
+| SINTERSTORE                |        |                                   |
+| SUNIONSTORE                |        |                                   |
+| SMOVE srckey dstkey member | 0/1    | *atomic*                          |
+| SCARD                      | len    | candinality                       |
+
+* zset
+|                                    | return |             |
+|------------------------------------+--------+-------------|
+| ZADD key score val                 | 0/1    |             |
+| ZRANGE key lo -hi [WITHSCORES]     | lst    | idx         |
+| ZREVRANGE                          |        | reverse     |
+| ZCARD                              | len    | candinality |
+| ZRANGEBYSCORE min max [WITHSCORES] |        | [min, max]  |
+| ZSCORE key val                     | score  |             |
+| ZREM key val                       | 0/1    |             |
+| ZINCRBY key delta val              | score  |             |
+| ZRANK key val                      | rank   | 0-indexed   |
+| ZREM key val                       | 0/1    |             |
+| ZREMRANGEBYSCORE key min max       | n      |             |
+| ZCOUNT min max                     | n      |             |
+NOTE: score must be number (for comparision)
+NOTE: same score is ok, but same value will update
+
+* hash
+|                        | return |                  |
+|------------------------+--------+------------------|
+| HSET dct key val       | 0/1    |                  |
+| HGET dct key           | val    |                  |
+| HINCRBY dct key [-n]   | val    |                  |
+| HDEL dct key           | 0/1    |                  |
+| HGETALL dct            | lst    | [key1, val1, ..] |
+| HEXISTS dct key        | 0/1    |                  |
+| HKEYS dct              | lst    | [key1, key2, ..] |
+| HVALS                  | lst    | [val1, val2, ..] |
+| HLEN dct               | len    |                  |
+| HMSET dct key val ..   | OK     | hash multi set   |
+| HMGET dct key1 key2 .. | lst    | hash multi get   |
+
+* advanced
+** transaction block
+MULTI
+cmd1 (return QUEUED)
+cmd2
+...
+cmdn
+EXEC (or DISCARD)
+
+** SORT
+sort key [By pattern] [LIMIT start count] [ASC|DESC] [ALPHA] [STORE dstkey]
+
+NOTE: default asc, by number (use alpha -> alphabets)
+
+by prefix_*_suffix (the key's value)
+get prefix_*_suffix
+
+** scan
+
+* start/stop
+#+BEGIN_SRC sh
+sudo service redis start
+sudo service redis stop
+sudo service redis restart
+redis-cli
+#+END_SRC
