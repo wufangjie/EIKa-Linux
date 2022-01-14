@@ -224,7 +224,7 @@ case
 end
 #+END_SRC
 
-** 开窗函数 (mysql 8.0+)
+** window function 开窗函数 (mysql 8.0+)
 *** 可以用专用函数或聚合函数
 专用函数:
 + rank
