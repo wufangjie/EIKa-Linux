@@ -12,5 +12,13 @@ the thing should do after install
 + use eshell's prefix match to fast locate correct cmd in history
 + use h2r sub cmd to fast match hard to remember cmds
 
+* mysql
++ mysql 必知必会
++ 使用时积累的 tricks
+
+* mysql_practice
++ 经典 50 题
++ leetcode sql
+
 * useless
 seems useless now
