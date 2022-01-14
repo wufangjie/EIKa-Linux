@@ -279,6 +279,17 @@ from (select s_id
 left join student
 on t.s_id = student.s_id;
 #+END_SRC
+以上实现不保证顺序, 用下面这个
+
+#+BEGIN_SRC sql
+select student.*
+from student
+join (select s_id, score
+      from sc
+      where c_id = 1 and score < 60) t
+on student.s_id = t.s_id
+order by t.score desc;
+#+END_SRC
 
 * 13 按平均成绩从高到低显示所有学生的所有课程的成绩以及平均成绩
 #+BEGIN_SRC sql
@@ -351,7 +362,7 @@ left join (select s_id, sum(score) total
            from sc
 	   group by s_id) t2
 on t1.total < t2.total
-group by t1.s_id, t1.total
+group by t1.s_id, t1.total;
 #+END_SRC
 
 ** 开窗函数 (mysql 8.0+) + 子查询
@@ -388,10 +399,10 @@ group by t1.s_id, t1.total
 select sc.c_id, course.c_name,
   sum(if(score >= 85, 1, 0)) `C[100-85]`,
   sum(if(score >= 85, 1, 0)) / count(*) `P[100-85]`,
-  sum(if(score >= 75 and score < 85, 1, 0)) `C[85-70]`,
-  sum(if(score >= 75 and score < 85, 1, 0)) / count(*) `P[85-70]`,
-  sum(if(score >= 60 and score < 75, 1, 0)) `C[70-60]`,
-  sum(if(score >= 60 and score < 75, 1, 0)) / count(*) `P[70-60]`,
+  sum(if(score >= 70 and score < 85, 1, 0)) `C[85-70]`,
+  sum(if(score >= 70 and score < 85, 1, 0)) / count(*) `P[85-70]`,
+  sum(if(score >= 60 and score < 70, 1, 0)) `C[70-60]`,
+  sum(if(score >= 60 and score < 70, 1, 0)) / count(*) `P[70-60]`,
   sum(if(score < 60, 1, 0)) `C[60-0]`,
   sum(if(score < 60, 1, 0)) / count(*) `P[60-0]`
 from sc
@@ -403,7 +414,7 @@ group by c_id;
 * 18 查询各科成绩前三名的记录
 #+BEGIN_SRC sql
 select t.*
-from (select c_id, score, rank() over (partition by c_id order by score desc) as s_rank from sc) t
+from (select c_id, s_id, score, rank() over (partition by c_id order by score desc) as s_rank from sc) t
 where t.s_rank < 4;
 #+END_SRC
 
@@ -438,7 +449,7 @@ from student
 where s_name like "%风%";
 #+END_SRC
 
-* 23 查询同名同性学生名单，并统计同名人数
+* 23 查询同名同性(?)学生名单，并统计同名人数
 #+BEGIN_SRC sql
 select s_name, s_sex, count(*) as num
 from student
