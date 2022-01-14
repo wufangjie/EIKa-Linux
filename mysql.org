@@ -247,3 +247,20 @@ on 是在生成临时表时的条件,
 
 ** in, exists, join
 应该是差不多效率的
+** with as 创建可复用的子查询
+#+BEGIN_SRC sql
+with sq1 as (some_query),
+     sq2 as (some_query)
+some_query
+#+END_SRC
+
+** & 的使用 (mod 函数 %)
+leetcode 620. Not Boring Movies
+NOTE: (直接用 `id & 1` 174ms, `id & 1 == 1` 344ms)
+NOTE: 取反的话用 !(id & 1) 或 NOT(id & 1)
+#+BEGIN_SRC sql
+SELECT *
+FROM Cinema
+WHERE id & 1 AND description <> "boring"
+ORDER BY rating DESC
+#+END_SRC
