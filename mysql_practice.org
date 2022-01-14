@@ -580,6 +580,17 @@ on student.s_id = t.s_id
 where s_rank = 1;
 #+END_SRC
 
+#+BEGIN_SRC sql
+with zhang as (select s_id, score
+               from teacher, course, sc
+               where t_name = "张三" and teacher.t_id = course.t_id and course.c_id = sc.c_id)
+select student.*, zhang.score
+from student
+join zhang
+on student.s_id = zhang.s_id
+where zhang.score = (select max(score) from zhang);
+#+END_SRC
+
 ** 35 查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩
 有两种理解: 一是同一学生不同课程, 成绩有相同
 #+BEGIN_SRC sql
