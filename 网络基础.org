@@ -1,0 +1,183 @@
+* 网络
+** Physical Layer
+端点: PC
+内容: bitstream
+
+** Link Layer
+端点: MAC address
+内容: frame
+协议: Ethernet Protocol (18 + 46~1500)
+
+** Network Layer
+端点: IP address
+协议: IP (Internet Protocol)
+内容: IP 数据包, head 长 20~60, 总长 <= 65536
+ARP Protocol: 通过广播获取子网内 MAC (IP -> MAC)
+同一子网可以广播 (Broadcasting), 否则发送给网关 (gateway)
+
+** Transport Layer
+端点: IP + port
+
+UDP: head 长 8, 总长 <= 65536
+TCP: 可靠 head 长 20, 总长不限但通常会让 IP 包不需要再分割
+
+** Application Layer
+端点: application
+内容: 各应用 (种类) 的约定格式
+
+HTTP
+SMTP
+POP3
+
+DHCP
+DNS protocol: 网址 -> IP
+
+* HTTP
+cookie
+session
+token
+
+URI 是 URL 的超集 (包括 mailto:)
+http 本身是无状态协议 (为了简化操作), 但后来有了需要保持登录状态的需求, 就在 HTTP/1.1 引入了 Cookie 技术
+
+** options
+查询 HTTP 服务器端支持的 HTTP 方法种类: OPTIONS * HTTP/1.1
+
+** put/delete
+用来上传/删除文件, 自身不带验证机制, 一般不使用该方法
+
+** head
+同 get, 但不返回内容, 用于确认 URI 的有效性及资源更新时间
+
+** 状态码
+| 1xx | 处理中     |
+| 2xx | 成功       |
+| 3xx | 重定向     |
+| 4xx | 客户端错误 |
+| 5xx | 服务端错误 |
+
+| 204 | 成功, 但无数据返回                    |
+| 304 | 客户端缓存 last modified 之后有请求过 |
+| 308 | 永久重定向                            |
+
+* 网络安全
+** xss (跨站脚本, 为不和 css 混淆改为 xss)
+https://zhuanlan.zhihu.com/p/26177815
+
+** csrf (跨站请求伪造)
+https://zhuanlan.zhihu.com/p/37293032
+
+** 各种注入攻击
+sql
+
+* Cookbook
+** requests
+** TCP
+#+BEGIN_SRC python
+from socketserver import BaseRequestHandler, TCPServer
+
+from socketserver import StreamRequestHandler, TCPServer
+
+from socketserver import ThreadingTCPServer
+# will spawn a new process or thread on each client connection (no upper bound)
+
+#+END_SRC
+
+#+BEGIN_SRC python
+NWORKERS = 16
+for n in range(NWORKERS):
+    t = Thread(target=serv.serve_forever)
+    t.setName(str(n + 1))
+    t.daemon = True # t.setDaemon(True)
+    t.start()
+serv.serve_forever()
+#+END_SRC
+NOTE: 因为我用的是 emacs commit mode 来运行 python 的程序, 其实可以默认为主线程一直没有结束, 所以守护线程不会自动结束 (可以试着在 terminal 运行, 这时最后一句就是必要的)
+
+也可以手动 join
+#+BEGIN_SRC python
+handlers = [Thread(target=serv.serve_forever) for n in range(NWORKERS)]
+for t in handlers:
+    t.start()
+
+for t in handlers:
+    t.join()
+#+END_SRC
+
+因为都是 serve_forever, 所以线程池没有必要上
+
+** UDP
+** RPC
+11.6 XML-RPC
+11.8 NOTE: 貌似这一节的 pickle 是多余的?
+(In addition, objects are serialized using pickle (11.7))
+(后面 discuss 部分也说了可以用其他的序列化方式: JSON, XML)
+
+At the very least, the server shouldn’t crash if an exception is raised by a method
+
+** Communicating Between Interpreters
+11.7
+#+BEGIN_SRC python
+from multiprocessing.connection import Listener
+
+serv = Listener(('', 25000), authkey=b'peekaboo')
+conn = serv.accept()
+msg = conn.recv()
+conn.send(msg)
+
+# client file
+from multiprocessing.connection import Client
+c = Client(('localhost', 25000), authkey=b'peekaboo')
+c.send('hello')
+c.recv()
+#+END_SRC
+
+*** IPC (Unix domain socket)
+https://www.cnblogs.com/sparkdev/p/8359028.html
+好处:
++ 更有效率
+  不需要经过网络协议栈，
+  不需要打包拆包、计算校验和、维护序号和应答等，
+  只是将应用层数据从一个进程拷贝到另一个进程
++ IPC 机制本质上是可靠的通讯，而网络协议是为不可靠的通讯设计的
+
+只需修改一处:
+('localhost', 25000) -> '/tmp/myconn'
+
+** auth (hmac, SSL)
+
+Secure Sockets Layer 安全套接字协议, 可确保数据在网络上的传输过程中不会被截取及窃听
+
+** EVENT-Driven I/O
+
+* Thread
+#+BEGIN_SRC python
+import threading
+
+threading.Thread(
+    group=None, target=None, name=None, arg=(), kwargs=None, *, daemon=None)
+
+threading.current_thread().name() # in thread target funtion
+t.setName(name)
+t.name # getName
+
+t.daemon = True # must set before start()
+t.setDaemon
+t.isDaemon()
+
+t.is_alive()
+# t.isAlive() is deprecated
+
+t.start()
+t.join()
+#+END_SRC
+
+守护进程 :只会守护到主进程的代码结束
+守护线程 :会守护所有其他非守护线程的结束
+
+#+BEGIN_SRC python
+from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor(max_workers=NWORKERS) as pool:
+    for i in range(NWORKERS):
+        pool.submit(serv.serve_forever) # pool.submit(fn, /, *args, **kwargs)
+#+END_SRC
