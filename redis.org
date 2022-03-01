@@ -96,7 +96,7 @@ NOTE: same score is ok, but same value will update
 | HGETALL dct            | lst    | [key1, val1, ..] |
 | HEXISTS dct key        | 0/1    |                  |
 | HKEYS dct              | lst    | [key1, key2, ..] |
-| HVALS                  | lst    | [val1, val2, ..] |
+| HVALS dct              | lst    | [val1, val2, ..] |
 | HLEN dct               | len    |                  |
 | HMSET dct key val ..   | OK     | hash multi set   |
 | HMGET dct key1 key2 .. | lst    | hash multi get   |

@@ -244,9 +244,11 @@ on 是在生成临时表时的条件,
 而 where 是临时表生成后的过滤条件
 
 ** 聚合函数 group_concat
+按一定顺序
 
 ** in, exists, join
 应该是差不多效率的
+
 ** with as 创建可复用的子查询
 #+BEGIN_SRC sql
 with sq1 as (some_query),
