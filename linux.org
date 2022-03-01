@@ -87,7 +87,6 @@ git log filename
 git log
 #+END_SRC
 
-
 ** 撤销和删除
 *** 撤销 git rm
 
@@ -96,7 +95,6 @@ git status # 会提示可以撤销的命令, 分两步
 git restore --staged YuanMoWen.ttf # unstage
 git restore YuanMoWen.ttf # discard changes
 #+END_SRC
-
 
 ** diff
 用 (prefix) M-x vc-ediff 代替
@@ -163,6 +161,11 @@ fork -> create a new branch -> edit (github 网页上直接就能改) and commit
 
 ** conflicts
 TODO
+
+** git status 中文乱码
+#+BEGIN_SRC sh
+git config --global core.quotepath false
+#+END_SRC
 
 * svn
 #+BEGIN_SRC sh
