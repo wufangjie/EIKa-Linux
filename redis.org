@@ -140,3 +140,77 @@ sudo service redis stop
 sudo service redis restart
 redis-cli
 #+END_SRC
+
+* 消息队列的三种实现
+https://zhuanlan.zhihu.com/p/344269737
+
+** list
+通过 lpush/rpop, rpush/lpop 实现即时消费
+
+*** block (降低 cpu 消耗, 不一一直去请求)
+| BLPOP key timeout | b means block until lst have an element or timeout |
+| BRPOP key timeout | timeout = 0 means no timeout                       |
+
+*** rpoplpush (rpop lpush)
+val = rpop lst1
+then lpush lst2 val
+return val
+
+lst1 and lst2 can be same lst
+
+lst2 可用作消息队列的确认
+
+** publish/subscribe
+一个客户端 subscribe channel_name 会阻塞接收消息
+别的客户端 publish channel_name some_message
+第一个客户端会收到:
+#+BEGIN_EXAMPLE
+1) "message"
+2) "channel_name"
+3) "hello"
+#+END_EXAMPLE
+
+psubscribe means pattern subscribe (wildcard)
+
+| UNSUBSCRIBE  | 退定 |
+| PUNSUBSCRIBE |      |
+
+缺点:
++ 消息无法持久化，如果出现网络断开、Redis 宕机等，消息就会被丢弃。
++ 没有 Ack 机制来保证数据的可靠性
+
+** streams (为消息队列设计, 可持久化, 有 ack)
+尾部添加 ID 越来越大的消息
+
+#+BEGIN_SRC redis
+127.0.0.1:6379> xadd mystream * f1 v1 f2 v2 f3 v3
+"1646273397048-0"
+127.0.0.1:6379> xadd mystream * f4 v4
+#+END_SRC
+
+星号表示自动生成 (毫秒时间戳-该毫秒内产生的第几条消息(递增))
+
+#+BEGIN_SRC redis
+xrange mystream - +
+xlen mystream
+xdel mystream 1646273397048-0
+del mystream
+#+END_SRC
+
+符号 - + 分别表示最小, 最大消息ID
+xdel 返回 0/1
+
+*** consumer group
+#+BEGIN_SRC redis
+127.0.0.1:6379> xgroup create mystream mygroup1 $
+127.0.0.1:6379> xinfo stream mystream
+127.0.0.1:6379> xinfo groups mystream
+127.0.0.1:6379> xadd mystream * f5 v5
+127.0.0.1:6379> xreadgroup group mygroup1 c1 count 1 streams mystream >
+127.0.0.1:6379> xinfo groups mystream
+127.0.0.1:6379> xack mystream mygroup1 1646274873017-0
+127.0.0.1:6379> xinfo groups mystream
+#+END_SRC
+
+xreadgroup 会把本组 last-delivered-id 推进一个
+xack 会把 pending 编程 ack 的
