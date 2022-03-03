@@ -3,16 +3,22 @@
 |------------------+-------------------------------------+----------|
 | KEYS *           | lst                                 | wildcard |
 | TYPE key         | none, string, list, set, hash, zset |          |
-| HELP cmd         |                                     |          |
+| HELP cmd         |                                     | *        |
 | RENAME key1 key2 | OK                                  |          |
 | RENAMENX         | 0/1                                 |          |
 
-|                  | return  |
-|------------------+---------|
-| EXPIRE sec       | 0/1     |
-| TTL              | -2/-1/s |
-| PEXPIRE mill_sec | 0/1     |
+|                  | return  |                                  |
+|------------------+---------+----------------------------------|
+| EXPIRE keky sec  | 0/1     |                                  |
+| TTL              | -2/-1/s | get the *time to live* for a key |
+| PEXPIRE mill_sec | 0/1     |                                  |
 NOTE: set will reset expire time
+
+** ttl
+return values:
++ -2: means no such value or expired
++ -1: means no time limit
++ n: means left n secs
 
 * string
 |                     | return     |                                 |
@@ -36,19 +42,24 @@ NOTE: set will reset expire time
 | INCRBY key [-]n |                                |
 
 * list
-|                       | return |                        |
-|-----------------------+--------+------------------------|
-| LLEN key              | len    |                        |
-| LPOP key              | val    | left                   |
-| LPUSH key val ..      | len    |                        |
-| LRANGE key lo [-]hi   | lst    |                        |
-| LREM key [-]count val | 0/1    | O(n)                   |
-| RPOP key              | val    |                        |
-| RPUSH key val ..      | len    |                        |
-| RPOPLPUSH key1 key2   | val    |                        |
-| LINDEX key i          | val    |                        |
-| LSET key i val        | OK     |                        |
-| LTRIM key lo hi       | OK     | only keep lst[lo..=hi] |
+|                       | return |                         |
+|-----------------------+--------+-------------------------|
+| LLEN key              | len    |                         |
+| LPOP key              | val    | left                    |
+| LPUSH key val ..      | len    |                         |
+| LRANGE key lo [-]hi   | lst    | include hi lst[lo..=hi] |
+| LREM key [-]count val | 0/1    | remove O(n)             |
+| RPOP key              | val    |                         |
+| RPUSH key val ..      | len    |                         |
+| RPOPLPUSH key1 key2   | val    |                         |
+| LINDEX key i          | val    |                         |
+| LSET key i val        | OK     |                         |
+| LTRIM key lo hi       | OK     | only keep lst[lo..=hi]  |
+
+** lrem key [-]count val
+remove at most abs(`count`) of element which have value `val`
+negative: means from right to left
+return real removed count
 
 * set
 |                            | return |                                   |
@@ -56,8 +67,8 @@ NOTE: set will reset expire time
 | SADD key val ..            | 0/1    | 0: already in side                |
 | SISMEMBER key val          | 0/1    |                                   |
 | SPOP key [n]               |        |                                   |
-| SREM key val               | 0/1    |                                   |
-| SMEMBERS key               |        |                                   |
+| SREM key val               | 0/1    | remove                            |
+| SMEMBERS key               |        | all items                         |
 | SRANDMEMBER [n]            |        | -n means allow repeating          |
 | SDIFF key1 key2 ..         |        | set difference                    |
 | SINTER key1 key2 ..        |        | set intersection                  |
@@ -65,7 +76,7 @@ NOTE: set will reset expire time
 | SDIFFSTORE dstkey          |        | set dstkey (sdiff ..)             |
 | SINTERSTORE                |        |                                   |
 | SUNIONSTORE                |        |                                   |
-| SMOVE srckey dstkey member | 0/1    | *atomic*                          |
+| SMOVE srckey dstkey member | 0/1    | *atomic* source -> destination    |
 | SCARD                      | len    | candinality                       |
 
 * zset
@@ -85,6 +96,8 @@ NOTE: set will reset expire time
 | ZCOUNT min max                     | n      |             |
 NOTE: score must be number (for comparision)
 NOTE: same score is ok, but same value will update
+
+既有插入顺序 ZRANGE, 又有 score 顺序 ZRANGEBYSCORE
 
 * hash
 |                        | return |                  |
