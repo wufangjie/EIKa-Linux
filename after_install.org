@@ -179,3 +179,10 @@ lsb_release -a
 uname -a
 cat /proc/version
 #+END_SRC
+
+* aptitude
+可能很智能地解决依赖版本与现安装版本不匹配的问题
+#+BEGIN_SRC sh
+sudo apt-get install aptitude
+# 之后用 aptitude 代替 apt-get 即可
+#+END_SRC
