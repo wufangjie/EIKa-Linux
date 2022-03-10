@@ -186,3 +186,10 @@ cat /proc/version
 sudo apt-get install aptitude
 # 之后用 aptitude 代替 apt-get 即可
 #+END_SRC
+
+* TODO yum vs apt (待验证)
+| yum install -y | dpkg -i | apt-get install    |
+| yum update     |         | apt-get upgrade    |
+| yum -remove    | dpkg -r | apt-get remove     |
+|                |         | apt-get autoremove |
+| synaptic       |         |                    |
