@@ -134,9 +134,32 @@ git push origin HEAD --force
 |---------+--------------------------------------------|
 | HEAD~^^ | 上上个版本之前的                           |
 | HEAD~n  | 上100个版本                                |
+
 #+BEGIN_SRC sh
 git branch -a # 显示所有分支
 #+END_SRC
+
+** .git 文件
+*** HEAD
+#+begin_example
+ref: refs/heads/test
+#+end_example
+
+*** refs/heads/*
+#+begin_example
+latest commit hash of specific branch
+#+end_example
+
+*** logs/refs/heads/*
+对应分支的 commit log
+
+*** TODO: others
+
+** rebase (变基，用于 feature 实现，多人开发场景)
+#+begin_src
+git rebase -i HEAD~n
+#+end_src
+
 
 ** remove remote tag
 #+BEGIN_SRC sh
