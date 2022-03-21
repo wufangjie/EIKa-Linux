@@ -32,7 +32,6 @@ sudo apt-get install fcitx fcitx-libpinyin
 * install python packages
 #+BEGIN_SRC sh
 sudo apt-get install python3-pip
-sudo apt-get install python3-pip
 sudo apt-get install python3-numpy python3-scipy python3-matplotlib
 sudo apt-get install python3-virtualenv
 pip3 install pandas seaborn selenium mysql-connector-python
@@ -64,7 +63,13 @@ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 #+END_SRC
 
 ** PATH
-reboot, make sure ~/.cargo/bin in PATH
+log out or
+#+begin_src sh
+source $Home/.cargo/env
+#+end_src
+
+make sure ~/.cargo/bin in PATH
+
 #+BEGIN_SRC sh
 cargo --version
 #+END_SRC
@@ -89,6 +94,16 @@ M-x lsp-install-server ret rust-analyzer ret
 
 # will download rust-analyzer to (~/.emacs.d/.cache/lsp/rust/) from
 # https://github.com/rust-analyzer/rust-analyzer/releases
+
+** change crates.io
+https://mirrors.ustc.edu.cn/help/crates.io-index.html
+#+begin_src conf
+[source.crates-io]
+replace-with = "ustc"
+
+[source.ustc]
+registry = "git://mirrors.ustc.edu.cn/crates.io-index"
+#+end_src
 
 * locale
 C-x C-f /sudo::/etc/default/locale, 重启生效
