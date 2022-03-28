@@ -359,6 +359,14 @@ sudo umount /dev/sdb1
 sudo mkfs -t vfat /dev/sdb1
 #+END_SRC
 
+** head, tail
+To display the first 500 lines of the file `foo`
+To display the 500th line of the file `foo`
+#+begin_src sh
+head -n 500 foo
+head -n 500 foo | tail -n 1
+#+end_src
+
 ** other
 *** wget
 #+BEGIN_SRC sh
