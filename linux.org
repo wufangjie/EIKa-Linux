@@ -279,25 +279,24 @@ sudo find / -name "*#" | xargs rm
 
 ** compress and extract
 *** tar
-| -x | --extract       |
-|    |                 |
 | -z | --gzip .gz      |
+|----+-----------------|
+| -x | --extract       |
+| -c | --create        |
+| -v | --verbose       |
+| -f | --file          |
+|----+-----------------|
+| -C | --directory=DIR |
+|----+-----------------|
 | -Z | --compress .Z   |
 | -j | --bzip2 .bz2    |
 | -J | --xz .xz        |
-|    |                 |
-| -v | --verbose       |
-|    |                 |
-| -f | --file=ARCHIVE  |
-|    |                 |
-| -C | --directory=DIR |
-|    |                 |
 |----+-----------------|
-| -c | create          |
-| -u | update          |
+| -u | --update        |
 
-#+BEGIN_SRC
-tar -xzvf filename.tar.gz -C target_path
+#+BEGIN_SRC sh
+tar -zxvf filename.tar.gz [-C target_path]
+tar -zcvf filename.tar.gz dirs_or_files # top level dir is filename/
 #+END_SRC
 
 *** other common tools
