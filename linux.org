@@ -160,7 +160,6 @@ latest commit hash of specific branch
 git rebase -i HEAD~n
 #+end_src
 
-
 ** remove remote tag
 #+BEGIN_SRC sh
 git push --delete origin v0.0.6 # tag_name
@@ -189,6 +188,11 @@ TODO
 #+BEGIN_SRC sh
 git config --global core.quotepath false
 #+END_SRC
+
+** 修改默认编辑器
+#+begin_src sh
+git config core.editor /Applications/Emacs.app/Contents/MacOS/Emacs
+#+end_src
 
 * svn
 #+BEGIN_SRC sh
