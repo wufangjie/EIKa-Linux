@@ -194,6 +194,11 @@ git config --global core.quotepath false
 git config core.editor /Applications/Emacs.app/Contents/MacOS/Emacs
 #+end_src
 
+** 修改最近的一条没有 push 的 commit message (会打开 core.editor)
+#+begin_src sh
+git commit --amend
+#+end_src
+
 * svn
 #+BEGIN_SRC sh
 svn info [new_url]
