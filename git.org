@@ -1,0 +1,270 @@
+* basic
+https://git-scm.com/book/en/v2
+
+** First-Time Setup (config)
+#+begin_src sh
+  git config --global user.name "wfj"
+  git config --global user.email "wufangjie1223@126.com"
+
+  git config [--global] --list # list [global] config
+  git config --global init.defaultBranch main
+  git config --global core.editor emacs
+  git config --global core.quotepath false # git status 中文乱码
+#+end_src
+
+** workflow
+*** create repo
+#+begin_src sh
+  git init # create .git subdirectory
+#+end_src
+
+*** remote
+#+begin_src sh
+  git remote add origin git@github.com:wufangjie/EIKa-Linux.git
+  git remote rm origin
+  git remote rename <old> <new>
+  git remote -v
+  git remote show origin
+#+end_src
+
+*** clone or pull
+#+begin_src sh
+  git clone <repo> [new_name]
+  git clone git@github.com:wufangjie/EIKa-Linux.git
+  git pull git@github.com:wufangjie/EIKa-Linux.git
+  git pull origin main
+#+end_src
+
+*** commit and push
+#+begin_src sh
+  git commit -m "commit message"
+  git push origin main
+#+end_src
+
+** git status
+| status     | downward          | upward               |
+|------------+-------------------+----------------------|
+| untracked  | git add to staged |                      |
+| unmodified | edit              | git rm               |
+| modified   | git add           | git restore          |
+| staged     | git commit        | git restore --staged |
+| committed  |                   |                      |
+
+NOTE:
++ committed 也就是新的 unmodified
++ git rm 只能作用于 unmodified, 否则会报错
+
+** git add (add file to stage)
+#+begin_src sh
+  git add .     # add all 2.0 以后被删除的也会 stage
+  git add -u    # add all except untracked
+  git add -A    # add all
+
+  git add *     # use wildcard (terminal's feature)
+#+end_src
+
+** diff
+https://zhuanlan.zhihu.com/p/356493390
+macos 下 ediff 不如 linux 下好用(无法在对比状态切出去修改), 尝试学习 vc-diff
+
+@@ 表示之间的内容表示: 从第几行还是的之后几行有区别
+
+
+通用参数
++ <file> 不加为整体的比较, 加了只比较指定文件
++ --stat 只显示统计信息 (哪些文件变了, 增加了几行, 删除了几行)
+
+#+begin_src sh
+  git diff                       # 工作区 VS 暂存区
+  git diff <commit>              # 工作区 VS 版本库
+  git diff --cache <commit>      # 暂存区 VS 版本库
+  git diff <commit_1> <commit_2> # 版本库不同版本之间
+#+end_src
+
+** log
+| 当前文件的 历史记录          | vc-print-log      | C-x v l |
+| commit 记录 (可会车展开详情) | vc-print-root-log | C-x v L |
+#+begin_src sh
+  git log <file> # 某文件的历史修改记录
+  git log # show all recent logs
+  git log <commit> # show commit logs
+
+  git reflog # [ref log] list commit_id and commit message
+#+end_src
+
+** 撤销和回退
+*** git restore (>=2.23)
+#+BEGIN_SRC sh
+  git restore --staged <file> # unstage
+  git restore <file> # discard changes in working directory
+  git restore .
+  git restore *.py
+#+END_SRC
+
+*** git reset
+#+begin_src sh
+  git reset --soft <commit> # 仅 HEAD 改变，Index，Working Dir 不变
+  git reset --mixed <commit>
+  git reset <commit> # 同 --mixed, 仅 Working Dir 不变
+  git reset --hard <commit> # 全变
+
+  git reset <file> # 等价于 git reset --mixed HEAD <file>
+  git reset .      # 这两个如果是 HEAD 的话还是直接用 restore 吧
+#+end_src
+
+*** git checkout
+#+begin_src sh
+  git checkout -- file # 用暂存区 (没有则版本库) 的版本替换工作区的版本
+
+  git checkout <commit>
+  git checkout <commit> <file>
+  git checkout <branch> <file>
+#+end_src
+一般都需要把修改 commit 之后再 checkout
++HEAD 不变，之后全回退+
+文件的话，会把那个文件单独拿出来
+
+== git switch + git restore
+
+*** git revert
+通过新建提交来撤销之前的提交
+
+*** git reflog
+reset 和 checkout 会修改提交，git log 就找不到了，需要 git reflog
+
+** 其他常用命令
+#+BEGIN_SRC sh
+git rm file [--cache | -f] # keep file or force removal
+git mv
+#+END_SRC
+
+
+* advance
+** 名词解释
+| HEAD    | the current commit your repo is on         |
+| origin  | the default name given to main remote repo |
+| master  | default branch, remote or local            |
+| main    | github default branch                      |
+|---------+--------------------------------------------|
+| HEAD~^^ | 上上个版本之前的                           |
+| HEAD~n  | 上100个版本                                |
+
+#+BEGIN_SRC sh
+git branch -a # 显示所有分支
+#+END_SRC
+
+| working directory | changed   |
+| Index             | staged    |
+| HEAD              | committed |
+
+** .git 文件概览
+*** HEAD
+#+begin_example
+ref: refs/heads/test
+#+end_example
+
+*** refs/heads/*
+#+begin_example
+latest commit hash of specific branch
+#+end_example
+
+*** logs/refs/heads/*
+对应分支的 commit log
+
+*** TODO: others
+
+** rebase (变基，常用于多人开发场景，实现 feature)
+#+begin_src
+git rebase -i HEAD~n
+#+end_src
+
+
+
+* github
+** 连接
+*** 生成 ssh key
+#+begin_src sh
+  ssh-keygen -t rsa -C "wufangjie1223@126.com" # 推荐下一种
+  ssh-keygen -t ed25519 -C "wufangjie1223@126.com"
+#+end_src
+
+github 账户右上角 Settings -> SSH and GPG keys -> New SSH key
+复制本地文件 ~/.ssh/id_rsa.pub (或 id_ed25519.pub) 内容到相应位置
+
+*** 测试是否添加成功
+#+begin_src sh
+  ssh -T git@github.com
+#+end_src
+
+* 名词解释
+** 三大区
+| 工作区 | Working Directory |       | changed  |
+| 暂存区 | Stage             | Index | staged   |
+| 版本库 | Repo              | HEAD  | commited |
+
+** <commit> (可以小写)
+HEAD
+HEAD^, HEAD^^
+HEAD~9
+
+
+* git in emacs
+
+* cookbook
+** 回车换行 (一般 windows 需要设置, 其他系统不用)
+#+begin_src sh
+git config --global core.autocrlf input
+#+end_src
+
+换行符不同系统不一致
+| cr   | \r   |             |
+| lf   | \n   | linux/macos |
+| crlf | \r\n | windows     |
+
+可用参数
+| true  | 检出时转成 crlf, 提交时转成 lf |
+| input | 检出时不转换, 提交时转成 lf    |
+| false | 不转换                         |
+
+** 如何更新 clone 的 repo
+https://www.zhihu.com/question/264732145
+#+BEGIN_SRC sh
+git clone url
+git fetch --all
+git reset --hard origin/master
+#+END_SRC
+
+** github 默认分支从 master 到 main 后
+#+BEGIN_SRC sh
+git checkout -b main && git merge master && git branch -d master # all in
+
+git checkout -b main
+git merge master
+git branch -d master # 删除本地 master
+git push origin :master # 删除远程 master
+#+END_SRC
+
+** cookbook
+*** 为别人的开源项目提交代码
+fork -> create a new branch -> edit (github 网页上直接就能改) and commit -> pull request
+如果需要修改之前的 pull request, 如果还没有被合并的话, 那么直接修改然后 commit 就可以了, 如果已经被合并了, 那就需要再提交一个新的 pull request
+
+*** 修改最近的一条没有 push 的 commit message (会打开 core.editor)
+#+begin_src sh
+git commit --amend
+#+end_src
+
+*** remove remote tag
+#+BEGIN_SRC sh
+git push --delete origin v0.0.6 # tag_name
+#+END_SRC
+https://stackoverflow.com/questions/5480258/how-to-delete-a-remote-tag
+
+*** 如果不小心把账号密码传到了 github 上, 可以进行如下操作
+#+BEGIN_SRC sh
+git reset --hard commit_id # 回退到没有错误提交前的版本
+git push origin HEAD --force
+#+END_SRC
+
+*** conflicts
+TODO
