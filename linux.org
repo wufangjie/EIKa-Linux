@@ -30,6 +30,17 @@ svn commit -m ""
 #+END_SRC
 
 * linux commandline
+** 端口相关
+*** 列出端口进程 (list opened files)
+#+begin_src
+lsof -i:8010
+#+end_src
+
+*** 杀掉端口相关进程
+#+begin_src sh
+kill -9 $(lsof -i:8010 -t)
+#+end_src
+
 ** wildcard
 | ?   |
 | *   |
