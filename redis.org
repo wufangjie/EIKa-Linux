@@ -20,6 +20,9 @@ return values:
 + -1: means no time limit
 + n: means left n secs
 
+** try redis online
+https://try.redis.io
+
 * string
 |                     | return     |                                 |
 |---------------------+------------+---------------------------------|
@@ -79,25 +82,33 @@ return real removed count
 | SMOVE srckey dstkey member | 0/1    | *atomic* source -> destination    |
 | SCARD                      | len    | candinality                       |
 
-* zset
+* zset (sorted set)
 |                                    | return |             |
 |------------------------------------+--------+-------------|
 | ZADD key score val                 | 0/1    |             |
 | ZRANGE key lo -hi [WITHSCORES]     | lst    | idx         |
 | ZREVRANGE                          |        | reverse     |
-| ZCARD                              | len    | candinality |
 | ZRANGEBYSCORE min max [WITHSCORES] |        | [min, max]  |
+| ZRANK key val                      | rank   | 0-indexed   |
 | ZSCORE key val                     | score  |             |
 | ZREM key val                       | 0/1    |             |
 | ZINCRBY key delta val              | score  |             |
-| ZRANK key val                      | rank   | 0-indexed   |
-| ZREM key val                       | 0/1    |             |
 | ZREMRANGEBYSCORE key min max       | n      |             |
+| ZCARD                              | len    | candinality |
 | ZCOUNT min max                     | n      |             |
-NOTE: score must be number (for comparision)
-NOTE: same score is ok, but same value will update
 
-既有插入顺序 ZRANGE, 又有 score 顺序 ZRANGEBYSCORE
+** 说明
+1. 值不能重复, score 可以相同 (所以它不是一个有序字典)
+2. 默认是从小到大的, 加 REV 则是从大到小, zrange VS zrevrange
+3. zrange 是按 score 排名区间取 key, zrangebyscore 是按 score 大小区间取 key
+4. 上面两个命令可以加 withscores, 返回时会带上 score
+5. zrank 获取某个 key 的 rank
+
+NOTE: score must be number (for comparision)
+
+** 用途
+1. 某段事件的排行榜: key 为时间段, val 为要排名的对象, score 为排名依据
+2. 用户访问限流: key 为用户, val 和 score 均为时间戳
 
 * hash
 |                        | return |                  |
