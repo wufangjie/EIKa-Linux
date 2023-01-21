@@ -1,0 +1,319 @@
+* 概览
+| 传送 | 逻辑 | 位  | 转移 | 函数 | 乘除 | 位移 | flag  | 条件跳转 | 端口 |
+|------+------+-----+------+------+------+------+-------+----------+------|
+| mov  | not  | add | loop | call | div  | shl  | pushf | ja       | in   |
+| push | and  | sub | jmp  | ret  | mul  | shr  | popf  | jna      | out  |
+| pop  | or   | inc | jxcz |      |      |      |       | jb       |      |
+|      | xor  | dec |      |      |      |      |       | jnb      |      |
+
+nop 空指令, 不进行任何操作
+
+* 立即数
++ 立即数: 也就是常数, 是以二进制形式存在机器码里的, 常写成 idata 或 imm
++ 立即数一般不能作为指令的操作数 (左值), 一般为第一个参数为操作数, 比如 sub 10, ax 通不过编译
++ 立即数可以是十进制, 二进制, 十六进制, 只需在最后加相应的标志即可
++ 立即数不能以字母开头, 要在前面加 0, 因为可能和别的字符混淆
+
+#+begin_src asm
+mov ax, 1
+mov bx, 2H
+mov cx, 11B
+mov dx, 0aH
+#+end_src
+
+* 零散知识点
++ 8086 的寻址总线是 20 位, 而 cpu 是 16 位, 所以用 CS:IP (段地址+偏移地址) 来寻址
++ 虽然 PC (CS+IP) 也是寄存器, 但不能用 mov 修改, 而使用特殊的 jmp
++ TODO: 读指令增加 IP 如果溢出不会加到 CS 上, SP 同
++ 双数据指令貌似不能是两个内存数据, 得要有一个是寄存器或立即数
++ ds 作为段寄存器, 直接写入数据是非法的, 只能从别的寄存器 mov
++ push/pop 都是以 word 为单位的
++ 清零 sub ax ax, 是两个字节, 比 mov ax, 0 省一个字节
++ 修改段寄存器时, 下一条指令会被紧接着执行
+
+* 寄存器
+http://www.baskent.edu.tr/~tkaracay/etudio/ders/prg/pascal/PasHTM2/pas/lowlevel.html
+
+** 通用寄存器: AX, BX, CX, DX
+|    | general purpose register | 高位 | 低位 |
+|----+--------------------------+------+------|
+| ax | accumulator register     | ah   | al   |
+| bx | base register            | bh   | bl   |
+| cx | counter register         | ch   | cl   |
+| dx | data register            | dh   | dl   |
+
+** 段寄存器和指针寄存器
+|    | segment register          |    | pointer register    |
+|----+---------------------------+----+---------------------|
+| cs | code segment              | ip | instruction pointer |
+| ds | data segment              |     |                     |
+| ss | stack segment             | sp | stack pointer       |
+| es | extra segment (any where) |    |                     |
+|    |                           | bp | base pointer        |
+
+** 索引寄存器
+|    | index register    | 常用搭配 |
+|----+-------------------+----------|
+| si | source index      | ds       |
+| di | destination index | es       |
+movsb, movsw
+
+** x86-64 扩展
+| bit | prefix | example  |
+|-----+--------+----------|
+|  32 | e      | eax, edi |
+|  64 | r      | rax, rdi |
+指令扩展的话, 也可能改成最后加 b/w/d/q 表示处理几位
+
+* 自定义段和数据
+** dw, db, dd, dup
+伪指令, 编译器处理成字节
+| dw | define word       | dw 1, 2          |
+| db | define byte       | db 'hello' ascii |
+| dd | define dword      |                  |
+|    | dq 没有 quad word |                  |
+
+一般会结合 dup 使用, 用于生成相同元素, 如:
+#+begin_src asm
+dw 21 dup (0)
+db 21 dup ('Hello', 'world')
+#+end_src
+
+** label
++ start 和 end start 搭配来定义入口, (主要用于代码前有数据的情况)
++ label 和 offset 来定址
+
+** stack segment
+栈段貌似不用特地去指定, 默认的 ss 是在 cs 前的, sp 是 0, 然后 push 后变成 0xfffe 目前没遇到过溢出, 应该是编译完后的程序就是设计成有那么大的
+
+* 索引
++ 8086 cpu 中可用于寻址的寄存器只有 bx, bp, si, di (而且 bx 和 bp 最多只能用一个, si 和 di 最多也只能用一个, 可以加多个立即数, 可以做四则运算, 编译器会完成可以完成的计算)
++ 只能是上面的四个寄存器, 其他的不行, 比如 cx (如果能用的话, 确实可能可以省一些空间和计算)
++ [特别重要] bp 对应的默认段地址是 ss, 只要有了它且没有指定段地址, 那没就默认用 ss 段地址, 可能是为了以下的这一类用法
+
+#+begin_src asm
+push bp
+mov bp sp
+mov ax, [bp+2]
+#+end_src
+
+* 单次操作处理长度
+如果指令中有寄存器, 则使用寄存器长度, 否则需要用关键字指定, 如
+#+begin_src asm
+mov byte ptr ds:[0], 1 ; 0x01
+mov word ptr ds:[0], 2 ; 0x0002
+#+end_src
+
+* 转移指令
+offset 伪指令, 编译时会被替换成地址, 如果在代码段内的话, 就是距 cs 的偏移地址
+NOTE: 相对位移都是有符号的
+
+可以修改 IP 或同时修改 CS 和 IP 的指令
+| jmp      | 无条件转移 |
+| loop     | 循环       |
+| jcxz 等  | 条件跳转   |
+| call/ret | 过程       |
+| int      | 中断       |
+
+** jmp
+jmp 翻译成机器码其实是根据相对位置跳转, 可以有三种形式 (1,2,4字节), 比如 EB03, IP+3
+| jmp short label     | (偏移 -128~127 byte) 段内短转移     |
+| jmp near ptr label  | (偏移 -32768~32767 word) 段内近转移 |
+| jmp far ptr label   | (直接修改两个值 dword) 段间转移     |
+| jmp reg             |                                     |
+| jmp word ptr [mem]  |                                     |
+| jmp dword ptr [mem] |                                     |
+NOTE: 没有 byte ptr
+
+** jcxz and loop
+都是后接 label + offset_byte (offset_byte 可省略, 此时为 0)
+jcxz 是当 cx 为 0 时执行跳转到 label
+loop 是 (cx) = (cx) - 1, 如果为 0 则继续, 否则跳转到 label 比如
+变成机器码后都是转化成相对位移, 比如 E2FC 就是 loop IP-4 (FC 的补码)
+范围是 (-128 ~ 127) 超出的话, 编译时会报错
+
+** call and ret
+|                      | 等价描述                              |
+|----------------------+---------------------------------------|
+| ret                  | pop IP                                |
+| retf                 | pop IP + pop CS                       |
+| call label           | push IP + jmp near ptr label          |
+| call far ptr label   | push CS + push IP + jmp far ptr label |
+| call reg             | push IP + jmp reg                     |
+| call word ptr [mem]  | push IP + jmp word ptr [mem]          |
+| call dword ptr [mem] | puth IP + jmp dword ptr [mem]         |
+
+* div and mul
+** div (8.7)
+div byte/word ptr [mem] 或 div reg
+除数是 byte, 则被除数为 ax, 结果商保存在 al, 余数保存在 ah
+除数是 word, 则被除数的低位保存在 ax, 高位保存在 dx, 结果商保存在 ax, 余数保存在 dx
+NOTE: 这里需要高位大于除数否则商会溢出, 要写其他代码来组合结果
+详见 lab10 第二部分
+
+** mul (10.8)
+mul byte/word ptr [mem] 或 mul reg
+byte 型, 则另一个默认放在 al, 结果保存在 ax
+word 型, 则另一个默认放在 ax, 结果高位在 dx, 低位在 ax
+NOTE: 一次乘法肯定不会溢出, 但多次就会 (容易忽略), 需要十分小心
+
+* flag register
+是一个 16 位寄存器, 但它是按位起作用, pushf/popf 可以把标志寄存器入/出栈
+
+mov, push, pop 等传送指令不会影响(改变)标志寄存器
+| 11       | 10   | 9  |  8 | 7    | 6    | 4  | 2    | 0     |
+| OF       | DF   | IF | TF | SF   | ZF   | AF | PF   | CF    |
+|----------+------+----+----+------+------+----+------+-------|
+| NV       | UP   | DI |    | PL   | NZ   | NA | PO   | NC    |
+| OV       | DN   | EI |    | NG   | ZR   | AC | PE   | CY    |
+|          | up   |    |    | 7,15 |      |    | odd  |       |
+| overflow | down |    |    | neg  | zero |    | even | carry |
+
+|  2 | PF | parity    | 奇偶校验                         |
+|  4 | AF |           |                                  |
+|  8 | TF | trap      | debug 的 TF 始终为 1, 所以不显示 |
+|  9 | IF | interrupt |                                  |
+| 10 | DF | direction | 索引默认递增还是递减             |
+
+** SF 易错点
+#+begin_src asm
+mov al, 1100B
+mul al ; 因为结果是写入 ax 的, 所以 sf 看的是 ax 的最高位, 而不是 al, 所以是 0
+#+end_src
+
+** CF vs OF, 既不充分也不必要
+无符号数只需考虑 carry, 有符号数只需考虑 overflow (因为有符号数没有更高的位了) (貌似都是对于加减运算来说的)
+#+begin_src asm
+mov al, 0FCH
+add al, 05H ; 有 carray, 但没有 overflow, 只是负数加了一个绝对值更大的正数
+
+mov al, 7DH
+add al, 0BH ; 没有 carry, 但有 overflow, 两正变一负
+#+end_src
+
+** cmp 和 ZF, SF, CF, OF
+cmp + je, jne, ja(bove), jna, jb(elow), jnb
+
+** DF
+cld/std 设置 df 为 0/1 (di/si 决定递增/递减)
+rep movsb (loop es:di, ds:si; inc/dec)
+rep movsw (loop es:di, ds:si; add/sub 2)
+
+** shl/shr 和 CF
+shl, shr 都会把最后移出的一位放到 CF 中, 并且都用 0 填充
+右移不用 1 填充的话无法实现除 2 的效果
+如果移动位数大于 1, 必须放到 cl 中, 然后使用如 shl al, cl
+
+** 手动设置后面接的标志寄存器
+| clear | set | 寄存器 |
+|-------+-----+--------|
+| cld   | std | DF     |
+| cli   | sti | IF     |
+NOTE: 其他应该同理, 不过还没遇到, 不确定有没有
+
+* interrupt
+|           |      | 原因                         |      | 返回行为           |
+|-----------+------+------------------------------+------+--------------------|
+| interrupt | 中断 | 来自IO设备的信号             | 异步 | 总是返回下一条指令 |
+| trap      | 陷入 | 有意的异常, 如系统调用       | 同步 | 总是返回下一条指令 |
+| fault     | 异常 | 潜在可恢复的错误, 如除法溢出 | 同步 | 可能返回到当前指令 |
+| abort     | 终止 | 不可恢复的错误               | 同步 | 不会返回           |
+
+8086 好像会把上述经典的分类混淆,
++ 比如单步执行和调用 BIOS 和 DOS 预设中断貌似就是上面的陷入
++ 外中断又是上面的中断
++ 内中断比如除法溢出好像又是 fault
+
+|         中断类型码 |          |
+|--------------------+----------|
+|                  0 | 除法错误 |
+|                  1 | 单步执行 |
+|                  4 | into     |
+| 紧接的单字节立即数 | int      |
+
+** 中断过程
+1. 获取中断类型码 N
+2. pushf
+3. TF=0, IF=0
+4. push CS
+5. push IP
+6. (IP) = [N*4], (CS) = [N*4+2]
+
+** iret
+1. pop IP
+2. pop CS
+3. popf
+
+** 为什么要设置 TF 和 IF
+执行完任一指令后 cpu 检测到 TF 为 1 就会调中断响应/处理程序, 如果不设置, 在运行完中断响应/处理程序的第一条指令后 TF 还是 1, 就会又去调中断响应/处理程序
+
+** 中断例程
+中断响应/处理程序的简称
+
+** 连续指令
+有些命令是连在一起的, 中间不会响应中断, 比如下面的例子, 中断过程肯定会用到栈, 就会出错
+#+begin_src asm
+mov ss, ax
+mov sp, 0
+#+end_src
+
+** 用 int 实现 loop, jmp near ptr 功能
+详见 13.3
+
+** bios 和 dos 提供的中断例程
+可以看出 中断例程, 能向应用程序提供常用的功能, 比如 bios 提供和硬件相关的能力
+
+一个中断一般会提供多个功能, 通过 ah 寄存器来判断调哪个
+
+第 1/8 页位置 b800H, 80 * 2 * 25 = 4000
+Blink, bg_RGB, 高亮, fg_RGB
+| ah | BIOS int 10h   |                                              |
+|----+----------------+----------------------------------------------|
+|  2 | 设置光标位置   | bh页, dh行, dl列                             |
+|  9 | 光标处显示字符 | al字符, bl颜色, bh页, dh行, dl列, cx重复次数 |
+
+| ah  | DOS int 21h                |                                   |
+|-----+----------------------------+-----------------------------------|
+| 4ch | 就是之前常用的程序结束返回 |                                   |
+| 9   | 光标处显示字符串           | ds段地址, dx偏移地址, 必须以$结束 |
+
+#+begin_src asm
+mov ax, 4c00h ; 修改 ah
+int21h
+#+end_src
+
+* 一些特殊内存地址
++ 程序最前面 256 字节内存存放的是 PSP, DOS 用来和程序通信
++ 所有内存前 1024 字节存的是中断向量表, 256 * (2 + 2)
++ 一般 0:200~0:2ff (中断向量表的一部分) 这 256 字节都是空的, 测试时可以用这段地址
++ 0xFFFF:0 是 BIOS 的起始位置
+
+* 端口
+** 读写
+联系网络应用的端口读数据
+#+begin_src asm
+in al, 20h  ; 从20h 端口读入一个字节
+out 20h, al ; 往20h 端口写入一个字节
+
+mov dx, 3f8h
+in al, dx   ; 读入一个字
+out dx, al
+#+end_src
+
+** CMOS 和 BCD 码
+以 4bit 表示一个十进制位, 比如 0010 0110 表示 26
+
+CMOS 中保存时间的就是这个: 秒分时日月年, 每个一字节, 两位
+| 秒 | 分 | 时 | 日 | 月 | 年 |
+|----+----+----+----+----+----|
+|  0 |  2 |  4 |  7 |  8 |  9 |
+
+* 外中断
+这一章不太明白芯片是什么, 就去查了以下 https://zhuanlan.zhihu.com/p/444385792
+
++ 可屏蔽中断: 当 IF=1  时执行完当前指令后响应中断, 当 IF=0 时不响应, 这也是之前的编写中断程序时设置 IF=0 的原因 (默认情况 IF=1), 当然也可以手动设置不屏蔽 sti/cli
++ 不可屏蔽中断, 类型码固定为 2
+
+几乎所有外设引发的中断都是可屏蔽中断
+
+ESC 键盘的那段程序, 我们读了端口的数据, 岂不是原本的那个9号中断例程会取不到扫描码?
